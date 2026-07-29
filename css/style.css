@@ -60,7 +60,7 @@
   --border-hairline-inverse: 1px solid var(--color-primary-700);
 
   /* Layout */
-  --container-max: 1760px;
+  --container-max: 1600px;
   --side-pad: 200px;
   --text-max: 820px;
   --grid-gap: 24px;
@@ -399,8 +399,11 @@ h3.heading-3{
 
 /* ==========================================================================
    Module F — Sticky Parallax
+   (Design Kit modules.js/styles.css의 exit/pass 계산 방식을 그대로 따름:
+   이미지는 sticky로 고정한 채 scale/dim만 진행하고, 카피는 트랙 상단에
+   고정된 absolute 블록으로서 --y/--o를 통해 이미지 위를 지나가듯 흐른다.)
    ========================================================================== */
-.pxl{ position: relative; }
+.pxl{ padding-inline: var(--pxl-inset); }
 .pxl__track{
   position: relative;
   height: var(--pxl-track);
@@ -408,31 +411,36 @@ h3.heading-3{
 .pxl__sticky{
   position: sticky;
   top: var(--pxl-inset);
+  z-index: 0;
   height: calc(100vh - (var(--pxl-inset) * 2));
-  margin-inline: var(--pxl-inset);
   border-radius: var(--pxl-radius);
   overflow: hidden;
   background: var(--color-placeholder);
+  transform: scale(var(--s, 1));
   will-change: transform;
 }
 .pxl__dim{
   position:absolute;
   inset:0;
   background: var(--color-primary-900);
-  opacity: 0;
+  opacity: var(--d, 0.7);
 }
 .pxl__copy{
-  position: sticky;
-  top: var(--pxl-inset);
-  height: calc(100vh - (var(--pxl-inset) * 2));
-  margin-top: calc(-1 * (100vh - (var(--pxl-inset) * 2)));
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 1;
   display:flex;
   flex-direction:column;
-  align-items:flex-start;
-  justify-content:flex-end;
-  text-align:left;
-  padding: 64px;
-  pointer-events: none;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding-inline: 24px;
+  color: var(--text-default-inverse);
+  transform: translateY(var(--y, 0));
+  opacity: var(--o, 1);
   will-change: transform, opacity;
 }
 .pxl__sub{
@@ -444,16 +452,18 @@ h3.heading-3{
   margin-bottom: 20px;
 }
 .pxl__head{
-  max-width: 640px;
+  max-width: 720px;
   font-size: var(--font-size-heading-0);
   font-weight: var(--font-weight-strong);
   line-height: 1.25;
   letter-spacing: var(--kr-tracking);
   color: var(--text-default-inverse);
 }
+@media (max-width: 1024px){
+  .pxl__track{ height: 130vh; }
+}
 @media (max-width: 760px){
   .pxl__head{ font-size: var(--font-size-heading-2); max-width: 100%; }
-  .pxl__copy{ padding: 32px; }
 }
 .pxl__body{ padding-top: 96px; }
 .pxl__body .body-2{ max-width: var(--text-max); }

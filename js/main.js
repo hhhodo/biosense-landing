@@ -19,60 +19,58 @@
     revealEls.forEach(function(el){ revealObserver.observe(el); });
   }
 
-  /* ---------------- Module F — sticky parallax ---------------- */
-  var track = document.querySelector(".pxl__track");
-  if (track && !reduceMotion) {
-    var img = track.querySelector("[data-pxl-img]");
-    var dim = track.querySelector("[data-pxl-dim]");
-    var copy = track.querySelector("[data-pxl-copy]");
-    var root = document.documentElement;
+  /* ---------------- Module F — sticky parallax ----------------
+     Design Kit(modules.js)의 exit/pass 계산을 그대로 사용:
+     - exit: 트랙 하단이 뷰포트를 빠져나가는 마지막 1vh 구간에서만
+       이미지 scale/dim이 진행된다 (트랙 진입 직후엔 원본 유지).
+     - pass: 트랙이 뷰포트를 통과하는 전체 구간(0~1)에 걸쳐 카피가
+       +250px → -250px로 흐르며, 구간 중앙(0.25~0.75)에서만 보인다.
+  */
+  var pxlTracks = Array.prototype.slice.call(document.querySelectorAll(".pxl__track"))
+    .map(function(el){
+      return {
+        track: el,
+        img: el.querySelector(".pxl__sticky"),
+        dim: el.querySelector(".pxl__dim"),
+        copy: el.querySelector(".pxl__copy")
+      };
+    })
+    .filter(function(t){ return t.img && t.dim && t.copy; });
 
-    var scaleEnd = parseFloat(getComputedStyle(root).getPropertyValue("--pxl-scale-end")) || 0.85;
-    var dimMax = parseFloat(getComputedStyle(root).getPropertyValue("--pxl-dim")) || 0.7;
-    var travel = parseFloat(getComputedStyle(root).getPropertyValue("--pxl-travel")) || 250;
+  if (pxlTracks.length && !reduceMotion) {
+    var clamp = function(v, a, b){
+      a = a === undefined ? 0 : a;
+      b = b === undefined ? 1 : b;
+      return Math.min(b, Math.max(a, v));
+    };
+    var lerp = function(a, b, t){ return a + (b - a) * t; };
+    var pxlTicking = false;
 
-    var ticking = false;
-
-    function copyOpacity(p){
-      if (p <= 0.25 || p >= 0.75) return 0;
-      if (p < 0.5) return (p - 0.25) / 0.25;
-      return 1 - (p - 0.5) / 0.25;
-    }
-
-    function update(){
-      ticking = false;
-      var rect = track.getBoundingClientRect();
+    function pxlFrame(){
       var vh = window.innerHeight;
-      var scrollable = rect.height - vh;
-      var progress = scrollable > 0 ? (-rect.top) / scrollable : 0;
-      progress = Math.min(1, Math.max(0, progress));
+      pxlTracks.forEach(function(t){
+        var r = t.track.getBoundingClientRect();
 
-      var scale = 1 - (1 - scaleEnd) * progress;
-      var dimOpacity = dimMax * progress;
-      var copyY = travel - travel * 2 * progress;
-      var opacity = copyOpacity(progress);
+        var exit = clamp((vh - r.bottom) / vh);
+        t.img.style.setProperty("--s", lerp(1, 0.85, exit).toFixed(4));
+        t.dim.style.setProperty("--d", lerp(0.7, 0, exit).toFixed(3));
 
-      root.style.setProperty("--s", scale.toFixed(4));
-      root.style.setProperty("--o", dimOpacity.toFixed(4));
-      root.style.setProperty("--y", copyY.toFixed(2) + "px");
-      root.style.setProperty("--co", opacity.toFixed(4));
-
-      img.style.transform = "scale(var(--s))";
-      dim.style.opacity = "var(--o)";
-      copy.style.transform = "translateY(var(--y))";
-      copy.style.opacity = "var(--co)";
+        var pass = clamp((vh - r.top) / (vh + r.height));
+        t.copy.style.setProperty("--y", lerp(250, -250, pass).toFixed(1) + "px");
+        t.copy.style.setProperty("--o",
+          (pass < 0.5 ? clamp((pass - 0.25) / 0.25) : clamp((0.75 - pass) / 0.25)).toFixed(3));
+      });
     }
 
-    function onScroll(){
-      if (!ticking) {
-        window.requestAnimationFrame(update);
-        ticking = true;
-      }
+    function pxlOnScroll(){
+      if (pxlTicking) return;
+      pxlTicking = true;
+      window.requestAnimationFrame(function(){ pxlFrame(); pxlTicking = false; });
     }
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    update();
+    window.addEventListener("scroll", pxlOnScroll, { passive: true });
+    window.addEventListener("resize", pxlFrame);
+    pxlFrame();
   }
 
 })();
