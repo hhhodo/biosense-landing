@@ -1,5 +1,7 @@
 # BIOSENSE — 정밀 진단 AI 랜딩페이지
 
+**Live: https://hhhodo.github.io/biosense-landing/**
+
 바이오/헬스케어 분야의 가상 정밀진단 AI 기업 "BIOSENSE"의 단일 통합 랜딩페이지입니다.
 
 `DESIGN_RULES_18.md`(EDITORIAL: 본문 20px 기준, Pretendard 단일 폰트, strong/base 2웨이트,
@@ -39,3 +41,8 @@ Display 크기 텍스트 3곳(≥2) · box-shadow 0건 · 카드 배경 transpar
 python3 -m http.server 8000
 # http://localhost:8000 접속
 ```
+
+## 배포
+
+`main` 브랜치에 push하면 GitHub Actions가 자동으로 GitHub Pages에 배포합니다.
+저장소 Settings → Pages → Source가 "GitHub Actions"로 설정되어 있어야 합니다.
